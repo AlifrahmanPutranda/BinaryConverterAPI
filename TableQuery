@@ -1,0 +1,60 @@
+USE [eClaimBrompit]
+GO
+
+CREATE TABLE [dbo].[DetailTransaksi](
+	[IdDetailTransaksi] [int] IDENTITY(1,1) NOT NULL,
+	[IdTransaksi] [int] NOT NULL,
+	[Harga] [nvarchar](max) NULL,
+	[Jumlah] [int] NOT NULL,
+	[Subtotal] [int] NOT NULL,
+ CONSTRAINT [PK_DetailTransaksi] PRIMARY KEY CLUSTERED 
+(
+	[IdDetailTransaksi] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+CREATE TABLE [dbo].[Transaksi](
+	[IdTransaksi] [int] IDENTITY(1,1) NOT NULL,
+	[TanggalOrder] [datetime2](7) NULL,
+	[Status] [nvarchar](2) NULL,
+	[TanggalPembayaran] [datetime2](7) NOT NULL,
+ CONSTRAINT [PK_Transaksi] PRIMARY KEY CLUSTERED 
+(
+	[IdTransaksi] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET IDENTITY_INSERT [dbo].[DetailTransaksi] ON 
+GO
+INSERT [dbo].[DetailTransaksi] ([IdDetailTransaksi], [IdTransaksi], [Harga], [Jumlah], [Subtotal]) VALUES (1, 2, N'20000', 2, 40000)
+GO
+INSERT [dbo].[DetailTransaksi] ([IdDetailTransaksi], [IdTransaksi], [Harga], [Jumlah], [Subtotal]) VALUES (2, 2, N'10000', 1, 10000)
+GO
+INSERT [dbo].[DetailTransaksi] ([IdDetailTransaksi], [IdTransaksi], [Harga], [Jumlah], [Subtotal]) VALUES (3, 4, N'10000', 1, 10000)
+GO
+SET IDENTITY_INSERT [dbo].[DetailTransaksi] OFF
+GO
+SET IDENTITY_INSERT [dbo].[Transaksi] ON 
+GO
+INSERT [dbo].[Transaksi] ([IdTransaksi], [TanggalOrder], [Status], [TanggalPembayaran]) VALUES (2, CAST(N'2020-12-01T11:30:00.0000000' AS DateTime2), N'L', CAST(N'2020-12-05T10:30:00.0000000' AS DateTime2))
+GO
+INSERT [dbo].[Transaksi] ([IdTransaksi], [TanggalOrder], [Status], [TanggalPembayaran]) VALUES (4, CAST(N'2020-12-01T11:30:00.0000000' AS DateTime2), N'P', CAST(N'0001-01-01T00:00:00.0000000' AS DateTime2))
+GO
+SET IDENTITY_INSERT [dbo].[Transaksi] OFF
+GO
+ALTER TABLE [dbo].[DetailTransaksi]  WITH CHECK ADD  CONSTRAINT [FK_DetailTransaksi_Transaksi] FOREIGN KEY([IdTransaksi])
+REFERENCES [dbo].[Transaksi] ([IdTransaksi])
+GO
+ALTER TABLE [dbo].[DetailTransaksi] CHECK CONSTRAINT [FK_DetailTransaksi_Transaksi]
+GO
+
+SELECT 
+   t.IdTransaksi, t.TanggalOrder, t.Status,
+   (SELECT SUM(dt.Subtotal) 
+    FROM DetailTransaksi as dt
+    WHERE dt.IdTransaksi = t.IdTransaksi) AS Total, (SELECT SUM(dt.Jumlah) 
+    FROM DetailTransaksi as dt
+    WHERE dt.IdTransaksi = t.IdTransaksi) AS Jumlah
+FROM Transaksi as t
+GROUP BY t.IdTransaksi, t.TanggalOrder, t.Status
